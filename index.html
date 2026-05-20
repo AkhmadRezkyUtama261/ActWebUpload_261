@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Sandbox</title>
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+    <div class="container mx-auto max-w-4xl p-6">
+        <header class="text-center my-8">
+            <h1 class="text-3xl font-bold text-gray-800">Image Upload Hub</h1>
+            <p class="text-gray-600 mt-2">Hanya menerima format gambar (JPG, JPEG, PNG, WEBP, GIF)</p>
+        </header>
+
+        <!-- Area Upload & Preview -->
+        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 mb-8">
+            <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition relative">
+                <!-- Input File: Atribut accept membatasi file explorer hanya menampilkan gambar -->
+                <input type="file" id="fileInput" accept="image/jpeg, image/jpg, image/png, image/webp, image/gif" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                
+                <div id="uploadPrompt" class="text-center pointer-events-none">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-600">Klik atau seret file gambar ke sini</p>
+                </div>
+
+                <!-- Preview Area (Tersembunyi di awal) -->
+                <div id="previewContainer" class="hidden text-center z-10 w-full max-w-xs">
+                    <img id="imagePreview" src="" alt="Preview" class="max-h-64 mx-auto rounded-lg shadow-sm border border-gray-200">
+                    <p id="fileName" class="text-xs text-gray-500 mt-2 truncate"></p>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Upload -->
+            <div class="mt-4 flex justify-end">
+                <button id="uploadBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Upload Gambar
+                </button>
+            </div>
+        </div>
+
+        <!-- Gallery / Tempat Gambar yang Berhasil di-Upload -->
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">Daftar Gambar Terupload</h2>
+        <div id="gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <!-- Tempat kartu gambar akan muncul lewat JavaScript -->
+        </div>
+    </div>
+
+    <!-- Logika JavaScript -->
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileName = document.getElementById('fileName');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const gallery = document.getElementById('gallery');
+
+        let selectedFileBlob = null;
+        let selectedFileName = '';
+
+        // 1. Handle Event ketika File Dipilih di File Explorer
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                selectedFileName = file.name;
+                
+                // Membuat objek URL sementara untuk preview gambar
+                selectedFileBlob = URL.createObjectURL(file);
+                
+                // Tampilkan container preview, sembunyikan prompt bawaan
+                imagePreview.src = selectedFileBlob;
+                fileName.textContent = selectedFileName;
+                
+                uploadPrompt.classList.add('hidden');
+                previewContainer.classList.remove('hidden');
+                uploadBtn.disabled = false; // Aktifkan tombol upload
+            }
+        });
+
+        // 2. Handle Event Klik Tombol Upload
+        uploadBtn.addEventListener('click', function() {
+            if (!selectedFileBlob) return;
+
+            // Buat elemen card baru di gallery
+            const card = document.createElement('div');
+            card.className = "bg-white p-4 rounded-xl shadow border border-gray-200 flex flex-col justify-between";
+
+            card.innerHTML = `
+                <div>
+                    <img src="${selectedFileBlob}" class="w-full h-40 object-cover rounded-lg border border-gray-100" alt="Uploaded Image">
+                    <p class="text-sm font-medium text-gray-700 mt-2 truncate">${selectedFileName}</p>
+                </div>
+                <div class="mt-4 flex gap-2">
+                    <a href="${selectedFileBlob}" download="${selectedFileName}" class="flex-1 bg-green-600 text-white text-center text-sm font-medium py-2 rounded-md hover:bg-green-700 transition">
+                        Download
+                    </a>
+                    <button onclick="this.closest('.bg-white').remove()" class="flex-1 bg-red-600 text-white text-sm font-medium py-2 rounded-md hover:bg-red-700 transition">
+                        Delete
+                    </button>
+                </div>
+            `;
+
+            // Masukkan card ke dalam gallery
+            gallery.appendChild(card);
+
+            // Reset form upload ke keadaan semula
+            resetUploadForm();
+        });
+
+        // Fungsi pembantu untuk mereset form upload
+        function resetUploadForm() {
+            fileInput.value = '';
+            selectedFileBlob = null;
+            selectedFileName = '';
+            imagePreview.src = '';
+            fileName.textContent = '';
+            
+            uploadPrompt.classList.remove('hidden');
+            previewContainer.classList.add('hidden');
+            uploadBtn.disabled = true;
+        }
+    </script>
+</body>
+</html>
